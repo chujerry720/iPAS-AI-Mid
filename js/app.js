@@ -11,10 +11,12 @@ const navButtons = document.querySelectorAll('#bottom-nav button');
 // ============ Countdown ============
 function updateCountdown() {
   const now = new Date();
-  const diff = EXAM_DATE - now;
-  const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const examDay = new Date(EXAM_DATE.getFullYear(), EXAM_DATE.getMonth(), EXAM_DATE.getDate());
+  const days = Math.round((examDay - today) / 86400000);
   const el = document.getElementById('countdown');
   if (days < 0) { el.textContent = '考試已過'; return; }
+  if (days === 0) { el.textContent = '今天考試,加油!'; el.classList.add('urgent'); return; }
   el.textContent = `距離 5/23 還有 ${days} 天`;
   if (days <= 7) el.classList.add('urgent');
 }
