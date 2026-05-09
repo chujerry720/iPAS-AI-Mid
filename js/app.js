@@ -95,7 +95,6 @@ function renderLearn() {
 
       const section = document.createElement('div');
       section.className = 'chapter-section';
-      section.style.setProperty('--chapter-color', ch.color || 'var(--accent)');
       section.innerHTML = `
         <div class="chapter-head">
           <div class="chapter-name">
@@ -106,7 +105,7 @@ function renderLearn() {
         </div>
         <div class="chapter-desc">${escapeHtml(ch.desc)}</div>
         <div class="chapter-progress-bar">
-          <div class="fill ${prog.mastered === prog.total && prog.total > 0 ? 'mastered' : ''}" style="width: ${prog.ratio * 100}%; background: ${ch.color || 'var(--accent)'}"></div>
+          <div class="fill ${prog.mastered === prog.total && prog.total > 0 ? 'mastered' : ''}" style="width: ${prog.ratio * 100}%"></div>
         </div>
         <div class="card-grid">
           ${cards.map(card => {
@@ -118,7 +117,7 @@ function renderLearn() {
                 }).join('、')}`
               : '';
             return `
-              <button class="concept-card" data-card="${card.id}" data-status="${status}" style="--card-color: ${ch.color}" ${status === 'locked' ? 'disabled' : ''}>
+              <button class="concept-card" data-card="${card.id}" data-status="${status}" ${status === 'locked' ? 'disabled' : ''}>
                 <div class="title">${escapeHtml(card.title)}</div>
                 <div class="status-dot"></div>
                 ${lockedReason ? `<div class="prereq-hint">${escapeHtml(lockedReason)}</div>` : ''}
@@ -292,7 +291,6 @@ function renderKnowledgeMap(subject) {
       // Active = both ends are read or mastered
       const active = ['read', 'mastered'].includes(pp.status) && ['read', 'mastered', 'available'].includes(p.status);
       path.setAttribute('class', active ? 'km-edge active' : 'km-edge');
-      if (active && pp.chapter) path.style.stroke = pp.chapter.color;
       path.setAttribute('marker-end', active ? 'url(#km-arrow-active)' : 'url(#km-arrow-dim)');
       svg.appendChild(path);
     }
@@ -312,7 +310,6 @@ function renderKnowledgeMap(subject) {
     btn.style.left = p.x + 'px';
     btn.style.width = CARD_W + 'px';
     btn.style.height = CARD_H + 'px';
-    btn.style.setProperty('--card-color', p.chapter.color);
     btn.title = card.title;
     if (p.status === 'locked') btn.disabled = true;
 
@@ -374,10 +371,8 @@ function renderReader(cardId) {
   State.save(state);
 
   const chapter = CHAPTERS.find(c => c.id === card.chapter) || {};
-  const chapterColor = chapter.color || 'var(--accent)';
 
   const wrap = document.createElement('div');
-  wrap.style.setProperty('--chapter-color', chapterColor);
   wrap.innerHTML = `
     <button class="back-btn" id="back-btn">← 返回章節</button>
     <div class="reader">
