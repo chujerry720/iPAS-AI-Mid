@@ -193,12 +193,12 @@ function renderKnowledgeMap(subject) {
   }
 
   // Layout dimensions
-  const CARD_W = 116;
-  const CARD_H = 78;
-  const GAP_X = 10;
-  const LEVEL_H = 116;
-  const PAD_X = 16;
-  const PAD_Y = 20;
+  const CARD_W = 104;
+  const CARD_H = 72;
+  const GAP_X = 8;
+  const LEVEL_H = 108;
+  const PAD_X = 12;
+  const PAD_Y = 18;
 
   // Compute width: max cards in any level
   let maxPerLevel = 1;
