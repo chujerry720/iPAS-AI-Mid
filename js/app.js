@@ -523,7 +523,7 @@ function renderPractice() {
       if (mistakes.length === 0) return '';
       return `
         <div style="margin-top:24px">
-          <button class="btn-secondary" id="retry-mistakes" style="width:100%">⚠️ 複習 ${Math.min(mistakes.length, 10)} 題錯題</button>
+          <button class="btn-secondary" id="retry-mistakes" style="width:100%">複習 ${Math.min(mistakes.length, 10)} 題錯題</button>
         </div>`;
     })()}
   `;
@@ -800,11 +800,11 @@ function renderStats() {
           `).join('')}
         </ul>
       </div>
-    ` : `<div class="empty-state"><div class="emoji">📊</div><div>還沒有資料,先做幾題吧</div></div>`}
+    ` : `<div class="empty-state"><div class="empty-title">尚無資料</div><div class="empty-hint">先做幾題,這裡會顯示你的學習表現</div></div>`}
 
     ${mistakes.length > 0 ? `
       <div class="weakness-card">
-        <h3>⚠️ 待複習錯題(${mistakes.length})</h3>
+        <h3>待複習錯題 · ${mistakes.length}</h3>
         ${mistakes.slice(0, 10).map(m => `
           <div class="mistake-item" style="margin-top:8px">
             <div class="qmeta">科目${m.q.subject} · ${escapeHtml(m.q.topic)} · 原 Q${m.q.number}</div>
@@ -816,13 +816,13 @@ function renderStats() {
     ` : ''}
 
     <div class="weakness-card">
-      <h3>📤 跨裝置同步進度</h3>
-      <p style="color:var(--muted);font-size:13px;margin:8px 0">
-        換瀏覽器/裝置會看不到進度?在原裝置點「匯出」,把文字複製或下載成檔,在新裝置點「匯入」貼上即可帶過。
+      <h3>跨裝置同步進度</h3>
+      <p style="color:var(--text-2);font-size:13px;margin:8px 0;line-height:1.6">
+        換瀏覽器或裝置會看不到進度。在原裝置點「匯出」,把文字複製或下載成檔,在新裝置點「匯入」貼上即可帶過。
       </p>
       <div style="display:flex;gap:8px;margin-top:8px">
-        <button class="btn-secondary" id="export-btn" style="flex:1">📤 匯出進度</button>
-        <button class="btn-secondary" id="import-btn" style="flex:1">📥 匯入進度</button>
+        <button class="btn-secondary" id="export-btn" style="flex:1">匯出進度</button>
+        <button class="btn-secondary" id="import-btn" style="flex:1">匯入進度</button>
       </div>
     </div>
 
@@ -863,7 +863,7 @@ function showExportDialog() {
   const d = document.createElement('dialog');
   d.className = 'sync-dialog';
   d.innerHTML = `
-    <h3>📤 匯出進度</h3>
+    <h3>匯出進度</h3>
     <p class="sync-hint">複製下方文字,或下載成 .json 檔。在新裝置點「匯入進度」貼上即可。</p>
     <textarea id="exp-ta" readonly></textarea>
     <div class="sync-msg" id="exp-msg"></div>
@@ -904,7 +904,7 @@ function showImportDialog() {
   const d = document.createElement('dialog');
   d.className = 'sync-dialog';
   d.innerHTML = `
-    <h3>📥 匯入進度</h3>
+    <h3>匯入進度</h3>
     <p class="sync-hint">貼上原裝置匯出的文字,或選一個 .json 檔。<strong>套用後會覆蓋目前進度</strong>。</p>
     <textarea id="imp-ta" placeholder="在這貼上匯出的進度文字..."></textarea>
     <input type="file" id="imp-file" accept="application/json,.json" style="margin-top:8px">
