@@ -596,7 +596,9 @@ function renderQuiz() {
       <div class="question-tags">
         <span class="tag subject">科目${q.subject}</span>
         <span class="tag">${q.topic}</span>
-        <span class="tag">原 Q${q.number}</span>
+        ${q.source === 'authored'
+          ? `<span class="tag source-authored">自編 #${q.number}</span>`
+          : `<span class="tag source-past">歷屆 Q${q.number}</span>`}
       </div>
       <div class="question-text">${escapeHtml(q.question)}</div>
       <div class="options">
