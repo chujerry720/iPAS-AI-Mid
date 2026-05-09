@@ -339,11 +339,10 @@ function renderKnowledgeMap(subject) {
   const legend = document.createElement('div');
   legend.className = 'km-legend';
   legend.innerHTML = `
-    <span><span class="swatch locked"></span>未解鎖</span>
-    <span><span class="swatch available"></span>可學</span>
+    <span><span class="swatch available"></span>未讀</span>
     <span><span class="swatch read"></span>已讀</span>
     <span><span class="swatch mastered"></span>精熟</span>
-    <span class="muted">→ 表示前置依賴</span>
+    <span class="muted">→ 建議的學習順序</span>
   `;
   wrap.appendChild(legend);
 
@@ -810,9 +809,23 @@ function renderStats() {
       </div>
     ` : ''}
 
+    <div class="weakness-card">
+      <h3>📤 跨裝置同步進度</h3>
+      <p style="color:var(--muted);font-size:13px;margin:8px 0">
+        換瀏覽器/裝置會看不到進度?在原裝置點「匯出」,把文字複製或下載成檔,在新裝置點「匯入」貼上即可帶過。
+      </p>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button class="btn-secondary" id="export-btn" style="flex:1">📤 匯出進度</button>
+        <button class="btn-secondary" id="import-btn" style="flex:1">📥 匯入進度</button>
+      </div>
+    </div>
+
     <button class="btn-secondary" id="reset-btn" style="width:100%;margin-top:24px;color:var(--wrong)">⚠️ 清除所有進度</button>
   `;
   app.appendChild(el);
+
+  document.getElementById('export-btn').addEventListener('click', showExportDialog);
+  document.getElementById('import-btn').addEventListener('click', showImportDialog);
 
   const mb = document.getElementById('retry-mistakes');
   if (mb) {
@@ -836,6 +849,91 @@ function renderStats() {
       go('learn');
     }
   });
+}
+
+// ============ Sync Dialogs ============
+function showExportDialog() {
+  const text = State.exportJSON(state);
+  const d = document.createElement('dialog');
+  d.className = 'sync-dialog';
+  d.innerHTML = `
+    <h3>📤 匯出進度</h3>
+    <p class="sync-hint">複製下方文字,或下載成 .json 檔。在新裝置點「匯入進度」貼上即可。</p>
+    <textarea id="exp-ta" readonly></textarea>
+    <div class="sync-msg" id="exp-msg"></div>
+    <div class="sync-actions">
+      <button class="btn-primary" id="exp-copy">複製</button>
+      <button class="btn-secondary" id="exp-dl">下載檔案</button>
+      <button class="btn-secondary" id="exp-close">關閉</button>
+    </div>
+  `;
+  document.body.appendChild(d);
+  d.querySelector('#exp-ta').value = text;
+  d.showModal();
+  d.querySelector('#exp-copy').addEventListener('click', async () => {
+    const msg = d.querySelector('#exp-msg');
+    try {
+      await navigator.clipboard.writeText(text);
+      msg.textContent = '✓ 已複製到剪貼簿';
+      msg.style.color = 'var(--accent)';
+    } catch {
+      d.querySelector('#exp-ta').select();
+      msg.textContent = '無法自動複製,請手動 Ctrl+C / ⌘C';
+      msg.style.color = 'var(--wrong)';
+    }
+  });
+  d.querySelector('#exp-dl').addEventListener('click', () => {
+    const blob = new Blob([text], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    const ts = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    a.download = `ipas-progress-${ts}.json`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+  d.querySelector('#exp-close').addEventListener('click', () => { d.close(); d.remove(); });
+}
+
+function showImportDialog() {
+  const d = document.createElement('dialog');
+  d.className = 'sync-dialog';
+  d.innerHTML = `
+    <h3>📥 匯入進度</h3>
+    <p class="sync-hint">貼上原裝置匯出的文字,或選一個 .json 檔。<strong>套用後會覆蓋目前進度</strong>。</p>
+    <textarea id="imp-ta" placeholder="在這貼上匯出的進度文字..."></textarea>
+    <input type="file" id="imp-file" accept="application/json,.json" style="margin-top:8px">
+    <div class="sync-msg" id="imp-msg" style="color:var(--wrong)"></div>
+    <div class="sync-actions">
+      <button class="btn-primary" id="imp-confirm">套用並覆蓋</button>
+      <button class="btn-secondary" id="imp-close">取消</button>
+    </div>
+  `;
+  document.body.appendChild(d);
+  d.showModal();
+
+  d.querySelector('#imp-file').addEventListener('change', e => {
+    const f = e.target.files[0];
+    if (!f) return;
+    const r = new FileReader();
+    r.onload = () => { d.querySelector('#imp-ta').value = r.result; };
+    r.readAsText(f);
+  });
+
+  d.querySelector('#imp-confirm').addEventListener('click', () => {
+    const text = d.querySelector('#imp-ta').value.trim();
+    const msg = d.querySelector('#imp-msg');
+    if (!text) { msg.textContent = '請先貼上文字或選檔案'; return; }
+    if (!confirm('套用後會覆蓋目前進度,確定?')) return;
+    try {
+      state = State.importJSON(text);
+      d.close(); d.remove();
+      go('learn');
+    } catch (err) {
+      msg.textContent = '匯入失敗:' + err.message;
+    }
+  });
+
+  d.querySelector('#imp-close').addEventListener('click', () => { d.close(); d.remove(); });
 }
 
 // ============ Utils ============
