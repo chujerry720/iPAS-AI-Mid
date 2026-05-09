@@ -525,18 +525,15 @@ nav#bottom-nav button.active { color: var(--accent); font-weight: 600; }
   letter-spacing: -0.01em;
 }
 .chapter-num {
-  background: var(--chapter-color, var(--accent));
-  color: white;
+  background: var(--surface-2);
+  color: var(--text-2);
+  border: 1px solid var(--border);
   font-size: 11px;
-  padding: 3px 10px;
-  border-radius: 999px;
-  font-weight: 700;
+  padding: 2px 9px;
+  border-radius: 6px;
+  font-weight: 600;
   letter-spacing: .03em;
-  text-transform: uppercase;
   font-feature-settings: "tnum";
-}
-.chapter-section {
-  border-left: 3px solid var(--chapter-color, var(--border));
 }
 .chapter-progress-text {
   font-size: 12px;
@@ -579,13 +576,11 @@ nav#bottom-nav button.active { color: var(--accent); font-weight: 600; }
   cursor: pointer;
   color: var(--text);
   font: inherit;
-  border-left: 3px solid var(--card-color, var(--accent));
   box-shadow: var(--shadow-xs);
 }
 .concept-card:hover {
-  border-color: var(--card-color, var(--accent));
-  border-left-color: var(--card-color, var(--accent));
-  background: color-mix(in srgb, var(--card-color, var(--accent)) 4%, var(--surface));
+  border-color: var(--accent);
+  background: var(--accent-soft);
   box-shadow: var(--shadow-sm);
   transform: translateY(-1px);
 }
@@ -594,8 +589,8 @@ nav#bottom-nav button.active { color: var(--accent); font-weight: 600; }
   position: absolute;
   top: 12px;
   right: 12px;
-  width: 14px;
-  height: 14px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
   background: transparent;
   border: 1.5px solid var(--border);
@@ -604,12 +599,9 @@ nav#bottom-nav button.active { color: var(--accent); font-weight: 600; }
   justify-content: center;
   transition: background .15s var(--ease), border-color .15s var(--ease);
 }
-.concept-card[data-status="available"] .status-dot {
-  border-color: color-mix(in srgb, var(--card-color, var(--accent)) 50%, var(--border));
-}
 .concept-card[data-status="read"] .status-dot {
-  background: var(--card-color, var(--accent));
-  border-color: var(--card-color, var(--accent));
+  background: var(--accent);
+  border-color: var(--accent);
 }
 .concept-card[data-status="read"] .status-dot::after {
   content: "";
@@ -657,15 +649,14 @@ nav#bottom-nav button.active { color: var(--accent); font-weight: 600; }
 .reader-chapter-tag {
   display: inline-block;
   font-size: 11px;
-  padding: 4px 11px;
-  border-radius: 999px;
-  background: var(--chapter-color, var(--accent));
-  color: white;
-  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 6px;
+  background: var(--surface-2);
+  color: var(--text-2);
+  border: 1px solid var(--border);
+  font-weight: 600;
   letter-spacing: .03em;
-  text-transform: uppercase;
-  margin-bottom: 12px;
-  box-shadow: var(--shadow-xs);
+  margin-bottom: 14px;
 }
 .reader h2 {
   font-size: 24px;
@@ -856,12 +847,13 @@ nav#bottom-nav button.active { color: var(--accent); font-weight: 600; }
   stroke-dasharray: 4,3;
 }
 .km-arrows .km-edge.active {
+  stroke: var(--accent);
   stroke-width: 2;
   stroke-dasharray: none;
   opacity: .85;
 }
 .km-arrows marker#km-arrow-dim path { fill: var(--border); }
-.km-arrows marker#km-arrow-active path { fill: currentColor; }
+.km-arrows marker#km-arrow-active path { fill: var(--accent); }
 
 .tree-card {
   display: flex;
@@ -869,7 +861,7 @@ nav#bottom-nav button.active { color: var(--accent); font-weight: 600; }
   gap: 3px;
   padding: 8px 10px 8px;
   border-radius: 10px;
-  border: 1.5px solid var(--border);
+  border: 1px solid var(--border);
   background: var(--surface);
   color: var(--text);
   cursor: pointer;
@@ -880,41 +872,39 @@ nav#bottom-nav button.active { color: var(--accent); font-weight: 600; }
   overflow: hidden;
   box-shadow: var(--shadow-xs);
 }
-.tree-card[data-status="available"] {
-  border-color: color-mix(in srgb, var(--card-color, var(--accent)) 40%, var(--border));
-}
 .tree-card[data-status="available"]:hover {
   transform: translateY(-2px);
-  border-color: var(--card-color, var(--accent));
-  box-shadow: 0 4px 12px -4px var(--card-color, var(--accent));
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  box-shadow: var(--shadow-sm);
 }
 .tree-card[data-status="read"] {
-  border-color: var(--card-color, var(--accent));
-  background: color-mix(in srgb, var(--card-color, transparent) 8%, var(--surface));
+  border-color: var(--accent);
+  background: var(--accent-soft);
 }
 .tree-card[data-status="read"]:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px -4px var(--card-color, var(--accent));
+  box-shadow: var(--shadow);
 }
 .tree-card[data-status="mastered"] {
-  background: var(--card-color, var(--accent));
-  border-color: var(--card-color, var(--accent));
+  background: var(--accent);
+  border-color: var(--accent);
   color: white;
 }
 .tree-card[data-status="mastered"]:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 14px -2px var(--card-color, var(--accent));
+  box-shadow: var(--shadow);
 }
 .tc-chapter {
-  font-size: 9.5px;
-  font-weight: 700;
-  color: var(--card-color, var(--accent));
-  letter-spacing: .04em;
-  text-transform: uppercase;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--muted);
+  letter-spacing: .02em;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
+.tree-card[data-status="read"] .tc-chapter { color: var(--accent); }
 .tree-card[data-status="mastered"] .tc-chapter {
   color: inherit;
   opacity: .85;
@@ -954,14 +944,11 @@ nav#bottom-nav button.active { color: var(--accent); font-weight: 600; }
   align-items: center;
   justify-content: center;
 }
-.tree-card[data-status="read"] .tc-badge {
-  background: var(--card-color);
-  color: white;
-}
+.tree-card[data-status="read"] .tc-badge { display: none; }
 .tc-badge.dot {
-  background: var(--card-color);
-  width: 8px;
-  height: 8px;
+  background: var(--accent);
+  width: 6px;
+  height: 6px;
   top: 8px;
   right: 8px;
 }
@@ -987,8 +974,8 @@ nav#bottom-nav button.active { color: var(--accent); font-weight: 600; }
   vertical-align: middle;
   border: 2px solid transparent;
 }
-.km-legend .swatch.available { border-color: var(--accent); background: var(--surface); }
-.km-legend .swatch.read { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, var(--surface)); }
+.km-legend .swatch.available { border-color: var(--border); background: var(--surface); }
+.km-legend .swatch.read { border-color: var(--accent); background: var(--accent-soft); }
 .km-legend .swatch.mastered { background: var(--accent); }
 .km-legend .muted { color: var(--muted); }
 
@@ -1023,47 +1010,6 @@ nav#bottom-nav button.active { color: var(--accent); font-weight: 600; }
     padding: 12px 16px;
   }
   nav#bottom-nav button.active { border-bottom-color: var(--accent); }
-}
-
-/* Dark-mode: soften chapter colors so they don't "neon-glow" on dark bg */
-@media (prefers-color-scheme: dark) {
-  .chapter-num {
-    background: color-mix(in srgb, var(--chapter-color, var(--accent)) 65%, var(--surface));
-    color: #f5f4f1;
-  }
-  .chapter-section {
-    border-left-color: color-mix(in srgb, var(--chapter-color, var(--border)) 60%, var(--surface));
-  }
-  .chapter-progress-bar .fill {
-    filter: saturate(.8) brightness(.92);
-  }
-  .concept-card {
-    border-left-color: color-mix(in srgb, var(--card-color, var(--accent)) 55%, var(--border));
-  }
-  .concept-card[data-status="read"] .status-dot {
-    background: color-mix(in srgb, var(--card-color, var(--accent)) 70%, var(--surface));
-    border-color: color-mix(in srgb, var(--card-color, var(--accent)) 70%, var(--surface));
-  }
-  .concept-card[data-status="read"] .status-dot::after {
-    background: var(--surface);
-  }
-  .tree-card[data-status="available"] {
-    border-color: color-mix(in srgb, var(--card-color, var(--accent)) 45%, var(--border));
-  }
-  .tree-card[data-status="read"] {
-    border-color: color-mix(in srgb, var(--card-color, var(--accent)) 60%, var(--border));
-    background: color-mix(in srgb, var(--card-color, transparent) 8%, var(--surface));
-  }
-  .tree-card[data-status="mastered"] {
-    background: color-mix(in srgb, var(--card-color, var(--accent)) 75%, var(--surface));
-    border-color: color-mix(in srgb, var(--card-color, var(--accent)) 75%, var(--surface));
-  }
-  .tc-chapter {
-    color: color-mix(in srgb, var(--card-color, var(--accent)) 80%, var(--text-2));
-  }
-  .reader-chapter-tag {
-    background: color-mix(in srgb, var(--chapter-color, var(--accent)) 70%, var(--surface));
-  }
 }
 
 /* Sync dialog (export/import progress) */
