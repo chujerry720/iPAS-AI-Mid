@@ -643,6 +643,13 @@ nav#bottom-nav button.active { color: var(--accent); font-weight: 600; }
   overflow-y: visible;
   -webkit-overflow-scrolling: touch;
   position: relative;
+  scrollbar-width: thin;
+}
+.knowledge-map::-webkit-scrollbar { height: 8px; }
+.knowledge-map::-webkit-scrollbar-track { background: transparent; }
+.knowledge-map::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
 }
 .knowledge-tree {
   position: relative;
