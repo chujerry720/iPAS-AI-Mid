@@ -40,13 +40,8 @@ const State = {
     return state;
   },
 
-  // Compute card status: locked / available / read / mastered
+  // Compute card status: available / read / mastered (no longer locks by prerequisite)
   cardStatus(state, card) {
-    // Locked if any prerequisite not yet read
-    for (const preId of (card.prerequisites || [])) {
-      const pre = state.conceptProgress[preId];
-      if (!pre || !pre.read) return 'locked';
-    }
     const cur = state.conceptProgress[card.id];
     if (!cur || !cur.read) return 'available';
     // Mastery: read + 2+ correct answers on related questions
@@ -143,5 +138,20 @@ const State = {
 
   reset() {
     localStorage.removeItem(STATE_KEY);
+  },
+
+  exportJSON(state) {
+    return JSON.stringify(state);
+  },
+
+  importJSON(text) {
+    const data = JSON.parse(text);
+    if (!data || typeof data !== 'object') throw new Error('內容不是 JSON 物件');
+    if (!data.questionStats || !data.conceptProgress) {
+      throw new Error('看起來不是這個 App 的進度資料');
+    }
+    const merged = { ...this.empty(), ...data };
+    this.save(merged);
+    return merged;
   },
 };
