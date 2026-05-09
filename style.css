@@ -638,12 +638,15 @@ nav#bottom-nav button.active { color: var(--accent); font-weight: 600; }
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 12px;
+  padding: 16px;
   overflow-x: auto;
   overflow-y: visible;
   -webkit-overflow-scrolling: touch;
   position: relative;
   scrollbar-width: thin;
+  /* On wide screens, break out of main's 720px max-width to use viewport space */
+  margin-left: min(0px, calc((720px - 100vw) / 2 + 16px));
+  margin-right: min(0px, calc((720px - 100vw) / 2 + 16px));
 }
 .knowledge-map::-webkit-scrollbar { height: 8px; }
 .knowledge-map::-webkit-scrollbar-track { background: transparent; }
