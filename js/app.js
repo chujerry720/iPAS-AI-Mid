@@ -192,17 +192,22 @@ function renderKnowledgeMap(subject) {
     });
   }
 
-  // Layout dimensions
-  const CARD_W = 104;
-  const CARD_H = 72;
-  const GAP_X = 8;
-  const LEVEL_H = 108;
-  const PAD_X = 12;
-  const PAD_Y = 18;
-
-  // Compute width: max cards in any level
+  // Compute layout dimensions dynamically based on available width
   let maxPerLevel = 1;
   for (const l of Object.values(byLevel)) maxPerLevel = Math.max(maxPerLevel, l.length);
+
+  const vw = window.innerWidth;
+  const mainContentW = Math.min(vw - 32, 688); // main padding 16 each side, max 720
+  const mapBreakout = Math.max(0, (vw - 720) / 2 - 16); // matches CSS breakout
+  const mapContentW = mainContentW + mapBreakout * 2 - 32; // map own padding 16 each side
+  const GAP_X = 12;
+  const PAD_X = 16;
+  const availableForCards = mapContentW - 2 * PAD_X - (maxPerLevel - 1) * GAP_X;
+  const CARD_W = Math.max(104, Math.min(160, Math.floor(availableForCards / maxPerLevel)));
+  const CARD_H = Math.round(CARD_W * 0.62);
+  const LEVEL_H = CARD_H + 38;
+  const PAD_Y = 22;
+
   const containerW = PAD_X * 2 + maxPerLevel * CARD_W + Math.max(0, maxPerLevel - 1) * GAP_X;
   const containerH = PAD_Y * 2 + (maxLevel + 1) * LEVEL_H - (LEVEL_H - CARD_H);
 
@@ -308,6 +313,7 @@ function renderKnowledgeMap(subject) {
     btn.style.width = CARD_W + 'px';
     btn.style.height = CARD_H + 'px';
     btn.style.setProperty('--card-color', p.chapter.color);
+    btn.title = card.title;
     if (p.status === 'locked') btn.disabled = true;
 
     const lockedReason = p.status === 'locked'
@@ -948,4 +954,13 @@ function escapeHtml(s) {
 // ============ Init ============
 updateCountdown();
 setInterval(updateCountdown, 60 * 60 * 1000);
+
+// Re-render knowledge map on resize so card sizes adapt
+let resizeTimer;
+window.addEventListener('resize', () => {
+  if (learnView !== 'map') return;
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => go('learn'), 200);
+});
+
 go('learn');
