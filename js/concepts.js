@@ -802,6 +802,58 @@ RAG 的解法很實用:當使用者問問題時,**先去資料庫檢索相關文
     order: 1,
     title: "漸進式部署 — 從單一場景擴展到全範圍",
     prerequisites: ["s1c6-1"],
+    diagram: `<svg viewBox="0 0 380 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="漸進式部署三階段:單點 → 同類擴展 → 全範圍">
+  <!-- Phase 1: 單點起步 -->
+  <g transform="translate(60,110)">
+    <circle r="14" fill="#10b981" fill-opacity=".25" stroke="#10b981" stroke-width="2"/>
+    <circle r="4" fill="#10b981"/>
+    <text y="42" text-anchor="middle" font-size="11" fill="currentColor" font-weight="600">Phase 1</text>
+    <text y="56" text-anchor="middle" font-size="10" fill="currentColor">放射科</text>
+    <text y="70" text-anchor="middle" font-size="10" fill="#10b981" font-weight="600">8% 影響面</text>
+    <text y="-30" text-anchor="middle" font-size="10" fill="currentColor">單點起步</text>
+  </g>
+  <!-- Arrow 1 -->
+  <g transform="translate(110,110)">
+    <line x1="0" y1="0" x2="38" y2="0" stroke="#9ca3af" stroke-width="1.5"/>
+    <polygon points="38,0 32,-4 32,4" fill="#9ca3af"/>
+    <text x="19" y="-6" text-anchor="middle" font-size="9" fill="currentColor">穩定</text>
+  </g>
+  <!-- Phase 2: 同類擴展 -->
+  <g transform="translate(180,110)">
+    <circle r="32" fill="#3b82f6" fill-opacity=".15" stroke="#3b82f6" stroke-width="2"/>
+    <circle cx="-12" cy="-8" r="4" fill="#3b82f6"/>
+    <circle cx="12" cy="-8" r="4" fill="#3b82f6"/>
+    <circle cx="0" cy="12" r="4" fill="#3b82f6"/>
+    <text y="56" text-anchor="middle" font-size="11" fill="currentColor" font-weight="600">Phase 2</text>
+    <text y="70" text-anchor="middle" font-size="10" fill="currentColor">+影像+病理</text>
+    <text y="84" text-anchor="middle" font-size="10" fill="#3b82f6" font-weight="600">25% 影響面</text>
+    <text y="-46" text-anchor="middle" font-size="10" fill="currentColor">同類擴展</text>
+  </g>
+  <!-- Arrow 2 -->
+  <g transform="translate(228,110)">
+    <line x1="0" y1="0" x2="38" y2="0" stroke="#9ca3af" stroke-width="1.5"/>
+    <polygon points="38,0 32,-4 32,4" fill="#9ca3af"/>
+    <text x="19" y="-6" text-anchor="middle" font-size="9" fill="currentColor">穩定</text>
+  </g>
+  <!-- Phase 3: 全範圍 -->
+  <g transform="translate(310,110)">
+    <circle r="50" fill="#f59e0b" fill-opacity=".15" stroke="#f59e0b" stroke-width="2"/>
+    <g fill="#f59e0b">
+      <circle cx="-22" cy="-18" r="3"/><circle cx="0" cy="-26" r="3"/><circle cx="22" cy="-18" r="3"/>
+      <circle cx="-30" cy="0" r="3"/><circle cx="-10" cy="-4" r="3"/><circle cx="10" cy="-4" r="3"/><circle cx="30" cy="0" r="3"/>
+      <circle cx="-22" cy="14" r="3"/><circle cx="0" cy="20" r="3"/><circle cx="22" cy="14" r="3"/>
+      <circle cx="-10" cy="28" r="3"/><circle cx="10" cy="28" r="3"/>
+    </g>
+    <text y="74" text-anchor="middle" font-size="11" fill="currentColor" font-weight="600">Phase 3</text>
+    <text y="88" text-anchor="middle" font-size="10" fill="currentColor">全院 12 科</text>
+    <text y="102" text-anchor="middle" font-size="10" fill="#f59e0b" font-weight="600">100% 影響面</text>
+    <text y="-64" text-anchor="middle" font-size="10" fill="currentColor">全範圍</text>
+  </g>
+  <!-- Bottom rule -->
+  <g transform="translate(0,200)" font-size="10" fill="currentColor" text-anchor="middle">
+    <text x="190">原則:每階段 = 風險可控 + 回饋可收斂 → 確認穩定才往下推</text>
+  </g>
+</svg>`,
     intuition: `**為什麼不能一次全推?**
 新 AI 系統上線就像**新藥上市** — 你不會直接給所有病人吃,要先小範圍試一陣子,確認沒事才推全部。
 
@@ -846,17 +898,19 @@ RAG 的解法很實用:當使用者問問題時,**先去資料庫檢索相關文
 
 跟漸進部署是同一個哲學,只是領域不同(軟體 vs 業務場景)。`,
     keyTerms: [
-      { term: "漸進式部署(Phased Rollout)", def: "新系統上線時不一次推全範圍,先選**小規模、可控、可比對**的場景試,逐步擴展。" },
-      { term: "風險可控", def: "出問題時影響面小到可承受,且能立刻回退。" },
-      { term: "回饋可收斂", def: "同類場景的使用回饋集中、可歸納,模型迭代才有方向。" },
-      { term: "金絲雀部署(Canary Release)", def: "軟體領域對應做法 — 先放 1% 流量,沒事再 5%、10%、50%、100% 逐步放大。" },
-      { term: "A/B 測試 vs 漸進部署", def: "**A/B**:同時跑兩版做對照;**漸進部署**:同一版逐步擴大覆蓋面。目的不同。" },
+      { term: "漸進式部署(Phased Rollout)", def: "**Phase = 階段、Rollout = 推開**(像把地毯一段一段攤開)。新系統上線**不一次推全範圍**,先選小規模試,穩定再擴。類比:**新藥分期臨床試驗** — Ⅰ期幾十人 → Ⅱ期幾百人 → Ⅲ期幾千人。" },
+      { term: "風險可控(Risk Containment)", def: "**Containment = 把風險「關住」**。出事時影響面小到可承受 + 能立刻回退。例:全院 12 科,先試 1 科 = 最壞情況只影響 **8%** 病人,不是 100%。" },
+      { term: "回饋可收斂(Feedback Convergence)", def: "**Convergence = 收向同一點**(像幾條河匯成一條)。同類場景的回饋**集中、可比對**,才知道模型該怎麼修。例:都是「胸腔 X 光誤判」 = 一個方向修;若是「腫瘤+骨折+心電圖」混在一起 = 沒辦法歸納。" },
+      { term: "金絲雀部署(Canary Release)", def: "**典故**:礦工帶金絲雀下礦坑,鳥對瓦斯敏感 — **鳥死了人快撤**。軟體做法:先放 **1%** 流量試 → 沒事再 **5% → 10% → 50% → 100%**。跟漸進部署同一哲學,差在「軟體領域用流量分」。" },
+      { term: "A/B 測試 vs 漸進部署", def: "**A/B**:同時跑 A、B 兩版做對照(目的:**比較**哪版好);**漸進部署**:同一版逐步擴大覆蓋面(目的:**控風險**)。常一起用 — 先 A/B 證明 B 比較好,再用漸進式把 B 推到全範圍。" },
+      { term: "代表性樣本(Representative Sample)", def: "試點族群的特徵分佈要**接近全體**,結論才能外推。反例:只在**夜班**測 = 樣本只代表夜班族群,推到日班會出事(因日班量大、急性病例多)。" },
     ],
     confusions: [
-      "**「病例量高 = 適合先試」是錯的** ← 急診雜亂,**回饋無法收斂**(歷屆 s1q23 陷阱)",
-      "**「離峰時段 = 安全」是錯的** ← 樣本不代表性,推全時段反而會出事",
-      "**「全範圍體驗模式 = 漸進」是錯的** ← 沒人真的用 = 收不到回饋(自編 #2 陷阱)",
-      "漸進部署的核心是「**收斂**」不是「**多樣**」 — 先選同質場景,後期才擴多樣性",
+      "**「病例量高 = 適合先試」是錯的** ← 急診情境雜(內科+外科+兒科+精神…),**回饋無法收斂**(歷屆 s1q23 陷阱)",
+      "**「離峰時段 = 安全」是錯的** ← 夜班樣本**不代表**全天,推到日班反而會出事",
+      "**「全範圍體驗模式 = 漸進」是錯的** ← 看似低風險,但**沒人實際用 = 收不到真實回饋**(自編 #2 陷阱)",
+      "「**收斂**」不是數學裡的「函數收斂」 — 這裡指**變因被收成同一類**(同科室、同病種、同流程),才能歸納出修改方向。",
+      "漸進部署的核心是「**收斂**」不是「**多樣**」 — 先選同質場景,後期才擴多樣性。",
     ],
     examPattern: `題目固定情境:某機構(醫院、銀行、電商、製造)要部署 AI,問怎麼推最穩。
 
