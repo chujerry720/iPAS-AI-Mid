@@ -887,9 +887,9 @@ nav#bottom-nav button.active { color: var(--accent); font-weight: 600; }
   box-shadow: var(--shadow);
 }
 .tree-card[data-status="mastered"] {
-  background: var(--accent);
+  background: var(--accent-soft-2);
   border-color: var(--accent);
-  color: white;
+  color: var(--text);
 }
 .tree-card[data-status="mastered"]:hover {
   transform: translateY(-2px);
@@ -904,11 +904,8 @@ nav#bottom-nav button.active { color: var(--accent); font-weight: 600; }
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.tree-card[data-status="read"] .tc-chapter { color: var(--accent); }
-.tree-card[data-status="mastered"] .tc-chapter {
-  color: inherit;
-  opacity: .85;
-}
+.tree-card[data-status="read"] .tc-chapter,
+.tree-card[data-status="mastered"] .tc-chapter { color: var(--accent); }
 .tc-title {
   font-size: 11.5px;
   font-weight: 600;
@@ -936,8 +933,8 @@ nav#bottom-nav button.active { color: var(--accent); font-weight: 600; }
   width: 14px;
   height: 14px;
   border-radius: 50%;
-  background: rgba(255,255,255,.25);
-  color: white;
+  background: var(--accent);
+  color: var(--surface);
   font-size: 9px;
   font-weight: 700;
   display: flex;
@@ -976,7 +973,7 @@ nav#bottom-nav button.active { color: var(--accent); font-weight: 600; }
 }
 .km-legend .swatch.available { border-color: var(--border); background: var(--surface); }
 .km-legend .swatch.read { border-color: var(--accent); background: var(--accent-soft); }
-.km-legend .swatch.mastered { background: var(--accent); }
+.km-legend .swatch.mastered { border-color: var(--accent); background: var(--accent-soft-2); }
 .km-legend .muted { color: var(--muted); }
 
 /* Practice intro */
