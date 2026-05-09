@@ -30,27 +30,27 @@
 }
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #0c0a09;           /* stone-950 */
-    --surface: #1c1917;      /* stone-900 */
-    --surface-2: #292524;    /* stone-800 */
-    --text: #fafaf9;
-    --text-2: #d6d3d1;       /* stone-300 */
-    --muted: #a8a29e;        /* stone-400 */
-    --primary: #fafaf9;
-    --primary-fg: #0c0a09;
-    --accent: #5eead4;       /* teal-300 — bright on dark */
-    --accent-2: #2dd4bf;     /* teal-400 */
+    --bg: #16130f;           /* warm charcoal, lifted from pure black */
+    --surface: #1f1c18;      /* one step up — gentler delta */
+    --surface-2: #2a2622;    /* nested surface */
+    --text: #f5f4f1;         /* warm off-white, easier on eyes than pure white */
+    --text-2: #c8c4be;       /* warm gray */
+    --muted: #8a847d;        /* dimmer label */
+    --primary: #f5f4f1;
+    --primary-fg: #16130f;
+    --accent: #2dd4bf;       /* teal-400, less neon than teal-300 */
+    --accent-2: #14b8a6;     /* teal-500 */
     --accent-soft: #042f2e;  /* teal-950 */
     --accent-soft-2: #134e4a;/* teal-900 */
-    --correct: #4ade80;
+    --correct: #34d399;
     --wrong: #f87171;
     --warn: #fbbf24;
-    --border: #44403c;       /* stone-700 */
-    --border-2: #292524;     /* stone-800 */
-    --shadow-xs: 0 1px 2px rgba(0, 0, 0, .4);
-    --shadow-sm: 0 1px 3px rgba(0, 0, 0, .4);
-    --shadow: 0 4px 12px rgba(0, 0, 0, .35);
-    --shadow-lg: 0 12px 28px rgba(0, 0, 0, .5);
+    --border: #3a342d;       /* warmer, blends with surface */
+    --border-2: #2a2622;     /* subtle dividers */
+    --shadow-xs: 0 1px 2px rgba(0, 0, 0, .35);
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, .35);
+    --shadow: 0 4px 12px rgba(0, 0, 0, .3);
+    --shadow-lg: 0 12px 28px rgba(0, 0, 0, .45);
   }
 }
 
@@ -1023,6 +1023,47 @@ nav#bottom-nav button.active { color: var(--accent); font-weight: 600; }
     padding: 12px 16px;
   }
   nav#bottom-nav button.active { border-bottom-color: var(--accent); }
+}
+
+/* Dark-mode: soften chapter colors so they don't "neon-glow" on dark bg */
+@media (prefers-color-scheme: dark) {
+  .chapter-num {
+    background: color-mix(in srgb, var(--chapter-color, var(--accent)) 65%, var(--surface));
+    color: #f5f4f1;
+  }
+  .chapter-section {
+    border-left-color: color-mix(in srgb, var(--chapter-color, var(--border)) 60%, var(--surface));
+  }
+  .chapter-progress-bar .fill {
+    filter: saturate(.8) brightness(.92);
+  }
+  .concept-card {
+    border-left-color: color-mix(in srgb, var(--card-color, var(--accent)) 55%, var(--border));
+  }
+  .concept-card[data-status="read"] .status-dot {
+    background: color-mix(in srgb, var(--card-color, var(--accent)) 70%, var(--surface));
+    border-color: color-mix(in srgb, var(--card-color, var(--accent)) 70%, var(--surface));
+  }
+  .concept-card[data-status="read"] .status-dot::after {
+    background: var(--surface);
+  }
+  .tree-card[data-status="available"] {
+    border-color: color-mix(in srgb, var(--card-color, var(--accent)) 45%, var(--border));
+  }
+  .tree-card[data-status="read"] {
+    border-color: color-mix(in srgb, var(--card-color, var(--accent)) 60%, var(--border));
+    background: color-mix(in srgb, var(--card-color, transparent) 8%, var(--surface));
+  }
+  .tree-card[data-status="mastered"] {
+    background: color-mix(in srgb, var(--card-color, var(--accent)) 75%, var(--surface));
+    border-color: color-mix(in srgb, var(--card-color, var(--accent)) 75%, var(--surface));
+  }
+  .tc-chapter {
+    color: color-mix(in srgb, var(--card-color, var(--accent)) 80%, var(--text-2));
+  }
+  .reader-chapter-tag {
+    background: color-mix(in srgb, var(--chapter-color, var(--accent)) 70%, var(--surface));
+  }
 }
 
 /* Sync dialog (export/import progress) */
