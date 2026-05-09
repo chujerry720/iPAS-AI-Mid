@@ -193,9 +193,9 @@ function renderKnowledgeMap(subject) {
   }
 
   // Layout dimensions
-  const CARD_W = 132;
+  const CARD_W = 116;
   const CARD_H = 78;
-  const GAP_X = 14;
+  const GAP_X = 10;
   const LEVEL_H = 116;
   const PAD_X = 16;
   const PAD_Y = 20;
