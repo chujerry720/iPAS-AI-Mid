@@ -11,6 +11,7 @@ const CHAPTERS = [
   { id: "s1c5", subject: 1, order: 5, name: "模型評估", desc: "Precision / Recall / F1 不再混", color: "#f59e0b" },
   { id: "s1c6", subject: 1, order: 6, name: "MLOps 部署", desc: "上線後怎麼盯模型", color: "#f97316" },
   { id: "s1c7", subject: 1, order: 7, name: "AI 風險治理", desc: "送分題的常識題", color: "#ef4444" },
+  { id: "s1c8", subject: 1, order: 8, name: "訓練實務", desc: "防過擬合 + 超參數調校", color: "#dc2626" },
   // 科目2
   { id: "s2c0", subject: 2, order: 0, name: "敘述性統計", desc: "看一筆資料的樣貌", color: "#10b981" },
   { id: "s2c1", subject: 2, order: 1, name: "機率分佈", desc: "三大必懂分佈", color: "#14b8a6" },
@@ -925,6 +926,259 @@ RAG 的解法很實用:當使用者問問題時,**先去資料庫檢索相關文
 3. **診斷題**:給一個方案,問「最大問題是什麼」 → 看哪個違反「風險可控」或「回饋可收斂」`,
     relatedTopics: ["AI風險"],
     relatedQids: ["s1q23", "s1q-a1", "s1q-a2", "s1q-a3", "s1q-a4", "s1q-a5", "s1q-a6", "s1q-a7"],
+  },
+
+  // ============ 科目1 Ch8: 訓練實務 ============
+  {
+    id: "s1c8-1",
+    chapter: "s1c8",
+    order: 1,
+    title: "防過擬合三件套 — Cross-Validation × Early Stopping × Regularization",
+    prerequisites: ["s1c5-1"],
+    diagram: `<svg viewBox="0 0 380 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="訓練/驗證誤差曲線與早停點 + K-Fold 折分示意">
+  <!-- Loss curves -->
+  <g transform="translate(20,20)">
+    <text x="120" y="0" text-anchor="middle" font-size="11" font-weight="600" fill="currentColor">訓練 vs 驗證 誤差曲線</text>
+    <!-- axes -->
+    <line x1="0" y1="140" x2="240" y2="140" stroke="#9ca3af" stroke-width="1.5"/>
+    <line x1="0" y1="20" x2="0" y2="140" stroke="#9ca3af" stroke-width="1.5"/>
+    <text x="-4" y="30" text-anchor="end" font-size="9" fill="currentColor">高</text>
+    <text x="-4" y="138" text-anchor="end" font-size="9" fill="currentColor">低</text>
+    <text x="240" y="156" text-anchor="end" font-size="9" fill="currentColor">epoch →</text>
+    <text x="-14" y="80" font-size="9" fill="currentColor" transform="rotate(-90,-14,80)">Loss</text>
+    <!-- Training loss: monotonic decrease -->
+    <path d="M 0 40 Q 60 70, 120 95 T 240 130" fill="none" stroke="#10b981" stroke-width="2"/>
+    <text x="200" y="125" font-size="10" fill="#10b981" font-weight="600">訓練誤差 ↓</text>
+    <!-- Validation loss: U-shape -->
+    <path d="M 0 55 Q 60 75, 120 80 Q 180 90, 240 115" fill="none" stroke="#3b82f6" stroke-width="2"/>
+    <path d="M 120 80 Q 180 75, 240 60" fill="none" stroke="#3b82f6" stroke-width="2" stroke-dasharray="4,3"/>
+    <text x="160" y="50" font-size="10" fill="#3b82f6" font-weight="600">驗證誤差(虛線=過擬合區)</text>
+    <!-- Early stopping marker -->
+    <line x1="120" y1="20" x2="120" y2="140" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="3,3"/>
+    <circle cx="120" cy="80" r="5" fill="#ef4444"/>
+    <text x="120" y="14" text-anchor="middle" font-size="10" fill="#ef4444" font-weight="700">⚑ Early Stop</text>
+  </g>
+  <!-- K-Fold strip -->
+  <g transform="translate(20,190)">
+    <text x="0" y="0" font-size="11" font-weight="600" fill="currentColor">K-Fold 交叉驗證(K=5):每折輪流當驗證集</text>
+    <g transform="translate(0,8)">
+      <rect x="0"   y="0" width="68" height="20" fill="#3b82f6" fill-opacity=".25" stroke="#3b82f6"/>
+      <rect x="68"  y="0" width="68" height="20" fill="#10b981" fill-opacity=".15" stroke="#10b981"/>
+      <rect x="136" y="0" width="68" height="20" fill="#10b981" fill-opacity=".15" stroke="#10b981"/>
+      <rect x="204" y="0" width="68" height="20" fill="#10b981" fill-opacity=".15" stroke="#10b981"/>
+      <rect x="272" y="0" width="68" height="20" fill="#10b981" fill-opacity=".15" stroke="#10b981"/>
+      <text x="34"  y="14" text-anchor="middle" font-size="9" fill="#3b82f6" font-weight="700">驗證</text>
+      <text x="102" y="14" text-anchor="middle" font-size="9" fill="currentColor">訓練</text>
+      <text x="170" y="14" text-anchor="middle" font-size="9" fill="currentColor">訓練</text>
+      <text x="238" y="14" text-anchor="middle" font-size="9" fill="currentColor">訓練</text>
+      <text x="306" y="14" text-anchor="middle" font-size="9" fill="currentColor">訓練</text>
+    </g>
+    <text x="0" y="38" font-size="9" fill="currentColor">↑ 第 1 折當驗證,其餘 4 折訓練。下一輪換第 2 折當驗證,共跑 5 次取平均。</text>
+  </g>
+</svg>`,
+    intuition: `**過擬合 = 模型把訓練資料「背起來」了,換新資料就傻眼。**
+
+打敗過擬合不是靠單招,是**三件套組合拳**:
+
+---
+
+**① Cross-Validation(交叉驗證)— 換評委驗收**
+
+你訓練模型像考生練題,**只用同一份模擬考評分**很容易高估自己。
+**K-Fold** 把資料切 K 份,輪流抽 1 份當「驗證」、其他 K-1 份當「訓練」,跑 K 次取平均 — 等於請 **5 個不同評委**輪流評分,結果才穩。
+
+> 例:5-Fold,每次 80% 訓練 + 20% 驗證,跑 5 次取平均 F1。
+
+---
+
+**② Early Stopping(早期停止)— 看驗證誤差,不是訓練誤差**
+
+訓練誤差永遠會繼續往下掉(因為一直在背題目),**但驗證誤差會先降後升** — 那個轉折點就是**過擬合起點**,要在那邊停。
+
+> 看訓練誤差 = 永遠停不下來(送分題陷阱)
+> 看**驗證誤差** = 看到連續 N 個 epoch 沒進步就停(N 通常設 5-10)
+
+---
+
+**③ Regularization(正則化)— 在 Loss 加「複雜度罰款」**
+
+直接在優化目標裡加一項「模型越複雜罰越多」,逼模型挑簡單路徑。
+- **L1(Lasso)**:把不重要的權重壓到 0(順便做特徵選擇)
+- **L2(Ridge)**:把所有權重壓小(但不歸零)
+- **Dropout**(神經網路專屬):訓練時隨機把一部分神經元「關掉」,逼整體不依賴單一神經元
+
+---
+
+**🚨 歷屆陷阱:超參數調校也要 Cross-Validation,但不能「同一份資料同時調參+評估」**
+
+否則驗證資料間接參與了參數選擇 = **資料洩漏(Data Leakage)**,評估結果**過度樂觀**(歷屆 s1q41)。
+正解:**Nested CV(巢狀交叉驗證)** — 外層評估、內層調參,兩層資料分離。`,
+    keyTerms: [
+      { term: "過擬合(Overfitting)", def: "**Over = 過頭、Fit = 配合**。模型把訓練資料的雜訊也當成規律學進去,換新資料就崩。徵兆:**訓練準確率高、驗證準確率低**(差距大)。" },
+      { term: "交叉驗證(Cross-Validation)", def: "**Cross = 交叉輪換、Validate = 驗證**。把資料切 K 份輪流當驗證集,跑 K 次取平均。例:**5-Fold** = 切 5 份、跑 5 次,每次用 80% 訓練 + 20% 驗證。比單一切分更穩。" },
+      { term: "早期停止(Early Stopping)", def: "看**驗證誤差**(不是訓練誤差!)若連續 N 個 epoch 沒下降就停,避免繼續訓練導致過擬合。N 通常設 5-10,稱為 **patience**。" },
+      { term: "正則化(Regularization)", def: "**Regular = 規律、化 = 強制變得**。在 Loss 加上「複雜度懲罰項」,逼模型用較簡單的權重組合。L1 / L2 / Dropout 都是手段。" },
+      { term: "L1 vs L2 正則化", def: "**L1(Lasso)**:罰權重的「絕對值」→ 把不重要的壓成 **0**(順便選特徵);**L2(Ridge)**:罰權重的「平方」→ 把所有權重壓小但**不歸零**。考試常考差異。" },
+      { term: "Dropout(隨機失活)", def: "訓練時**隨機關掉**(設為 0)一部分神經元(例 20%),強迫網路不依賴特定神經元。**只在訓練時關**,推論時全部打開。" },
+      { term: "資料洩漏(Data Leakage)", def: "**Leak = 漏出去**。本該只在「評估」階段使用的資料,提前在「調參」階段被偷看到 → 評估結果**過度樂觀**(看起來很準,實際上線就崩)。" },
+      { term: "巢狀交叉驗證(Nested CV)", def: "**雙層 CV**:外層切分用來**評估**模型、內層切分用來**調參**,兩層資料嚴格分離。防止「同一份資料同時調參+評估」造成的洩漏。" },
+    ],
+    confusions: [
+      "**Early Stopping 看的是「驗證誤差」不是「訓練誤差」** — 訓練誤差永遠會繼續下降,看它根本停不下來(s1q14 陷阱選 B 描述錯,應看 val loss)",
+      "**「標準化特徵」不是防過擬合的方法** — 標準化是**訓練前處理**,讓不同尺度特徵公平,跟過擬合沒直接關係(s1q14 陷阱 C)",
+      "**「提高模型複雜度+擴大搜尋範圍」反而**加劇過擬合(s1q14 陷阱 D)",
+      "**「在 K-Fold 上同時調參+評估」= 資料洩漏** ← 必須用 **Nested CV** 把「調參」與「評估」分開(s1q41)",
+      "L1 = 稀疏(會把權重變 0),L2 = 平滑(只把權重壓小)— 別倒過來記",
+      "Dropout 只在**訓練**時關神經元,**推論**時全部打開(否則結果不穩)",
+    ],
+    examPattern: `**3 種題型固定考法**:
+
+**① 「如何最有效防過擬合 / 提升泛化」** → 永遠選 **Cross-Validation** 或 **Early Stopping**(s1q14)
+- 陷阱:「標準化特徵」「提高模型複雜度+擴搜尋」 ← 都不對
+
+**② 「同時調參+評估造成什麼問題?」** → 選 **資料洩漏(Data Leakage) / 過度樂觀偏差**(s1q41)
+- 解法是 **Nested CV**
+
+**③ L1 vs L2 / Dropout 機制差異** → 字面記:L1 變 0、L2 變小、Dropout 是訓練時關神經元`,
+    relatedTopics: ["訓練"],
+    relatedQids: ["s1q14", "s1q41", "s1q-a8", "s1q-a9", "s1q-a13"],
+  },
+
+  {
+    id: "s1c8-2",
+    chapter: "s1c8",
+    order: 2,
+    title: "超參數調校 + GPU 記憶體實務",
+    prerequisites: ["s1c8-1"],
+    diagram: `<svg viewBox="0 0 380 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="三種超參數搜尋策略對比 + Batch Size 拆分示意">
+  <!-- Three search strategies -->
+  <g transform="translate(10,10)">
+    <text x="180" y="0" text-anchor="middle" font-size="11" font-weight="600" fill="currentColor">三種超參數搜尋策略(2D 參數空間)</text>
+    <!-- Grid Search -->
+    <g transform="translate(0,12)">
+      <rect x="0" y="0" width="110" height="110" fill="none" stroke="#9ca3af" stroke-width="1"/>
+      <text x="55" y="-2" text-anchor="middle" font-size="10" font-weight="600" fill="#10b981">Grid 網格</text>
+      <g fill="#10b981">
+        <circle cx="22" cy="22" r="3"/><circle cx="55" cy="22" r="3"/><circle cx="88" cy="22" r="3"/>
+        <circle cx="22" cy="55" r="3"/><circle cx="55" cy="55" r="3"/><circle cx="88" cy="55" r="3"/>
+        <circle cx="22" cy="88" r="3"/><circle cx="55" cy="88" r="3"/><circle cx="88" cy="88" r="3"/>
+      </g>
+      <text x="55" y="125" text-anchor="middle" font-size="9" fill="currentColor">系統化、保證掃完</text>
+    </g>
+    <!-- Random Search -->
+    <g transform="translate(125,12)">
+      <rect x="0" y="0" width="110" height="110" fill="none" stroke="#9ca3af" stroke-width="1"/>
+      <text x="55" y="-2" text-anchor="middle" font-size="10" font-weight="600" fill="#3b82f6">Random 隨機</text>
+      <g fill="#3b82f6">
+        <circle cx="18" cy="34" r="3"/><circle cx="42" cy="78" r="3"/><circle cx="61" cy="20" r="3"/>
+        <circle cx="74" cy="55" r="3"/><circle cx="92" cy="88" r="3"/><circle cx="32" cy="62" r="3"/>
+        <circle cx="86" cy="38" r="3"/><circle cx="55" cy="98" r="3"/><circle cx="100" cy="68" r="3"/>
+      </g>
+      <text x="55" y="125" text-anchor="middle" font-size="9" fill="currentColor">高維時更有效率</text>
+    </g>
+    <!-- Bayesian -->
+    <g transform="translate(250,12)">
+      <rect x="0" y="0" width="110" height="110" fill="none" stroke="#9ca3af" stroke-width="1"/>
+      <text x="55" y="-2" text-anchor="middle" font-size="10" font-weight="600" fill="#f59e0b">Bayesian 貝葉斯</text>
+      <!-- contour suggesting optimum -->
+      <ellipse cx="70" cy="60" rx="32" ry="22" fill="#f59e0b" fill-opacity=".08" stroke="#f59e0b" stroke-opacity=".4" stroke-dasharray="2,2"/>
+      <ellipse cx="70" cy="60" rx="18" ry="12" fill="#f59e0b" fill-opacity=".15" stroke="#f59e0b" stroke-opacity=".4" stroke-dasharray="2,2"/>
+      <g fill="#f59e0b">
+        <circle cx="20" cy="20" r="3" opacity=".5"/>
+        <circle cx="90" cy="30" r="3" opacity=".5"/>
+        <circle cx="40" cy="80" r="3" opacity=".7"/>
+        <circle cx="65" cy="55" r="3"/><circle cx="72" cy="62" r="3"/><circle cx="68" cy="68" r="3"/>
+        <circle cx="78" cy="58" r="3"/>
+      </g>
+      <text x="55" y="125" text-anchor="middle" font-size="9" fill="currentColor">用歷次結果引導</text>
+    </g>
+  </g>
+  <!-- GPU memory strategy -->
+  <g transform="translate(10,165)">
+    <text x="0" y="0" font-size="11" font-weight="600" fill="currentColor">GPU 記憶體不夠時 — 縮 Batch + Data Sharding</text>
+    <!-- Big batch -->
+    <g transform="translate(0,10)">
+      <rect x="0" y="0" width="160" height="32" fill="#ef4444" fill-opacity=".15" stroke="#ef4444" stroke-width="1.5"/>
+      <text x="80" y="20" text-anchor="middle" font-size="10" fill="currentColor">Batch=128 → 1 張 GPU 爆 OOM ✗</text>
+    </g>
+    <!-- Arrow -->
+    <text x="195" y="32" text-anchor="middle" font-size="14" fill="#9ca3af">↓ 拆</text>
+    <!-- Sharded -->
+    <g transform="translate(220,10)">
+      <rect x="0"  y="0" width="38" height="32" fill="#10b981" fill-opacity=".2" stroke="#10b981" stroke-width="1.5"/>
+      <rect x="40" y="0" width="38" height="32" fill="#10b981" fill-opacity=".2" stroke="#10b981" stroke-width="1.5"/>
+      <rect x="80" y="0" width="38" height="32" fill="#10b981" fill-opacity=".2" stroke="#10b981" stroke-width="1.5"/>
+      <rect x="120" y="0" width="38" height="32" fill="#10b981" fill-opacity=".2" stroke="#10b981" stroke-width="1.5"/>
+      <text x="79" y="20" text-anchor="middle" font-size="9" fill="currentColor">B=32 × 4 GPU ✓</text>
+    </g>
+    <text x="0" y="60" font-size="9" fill="currentColor">縮小 Batch Size + Data Sharding 把資料分散到多張 GPU,單張記憶體壓力 ↓</text>
+  </g>
+</svg>`,
+    intuition: `**超參數 = 訓練前要先決定的「設定值」**(學習率、樹深度、Batch Size、正則化強度…),不是模型自己學的。要怎麼找到最佳組合?
+
+---
+
+**🔍 三種搜尋策略**
+
+| 策略 | 怎麼挑點 | 適合 | 弱點 |
+|---|---|---|---|
+| **Grid 網格** | 把每個參數切等距,**全部組合都試** | 參數少(2-3 個)、有把握範圍 | 參數一多就**指數爆炸**(5 個參數 × 各 5 值 = 3125 組) |
+| **Random 隨機** | 在範圍內**隨機抽**固定組數 | 參數多時比 Grid 強(因不重要參數不會浪費算力) | 沒有方向感,純運氣 |
+| **Bayesian 貝葉斯** | 用**歷次結果**建一個「哪裡可能比較好」的機率模型,引導下一次試哪 | 評估很貴(訓練很久)時最划算 | 實作複雜、early 階段不一定比 Random 好 |
+
+> **關鍵觀念**:Random Search 在**高維**反而比 Grid 好 — 因為若有些參數其實不重要,Grid 會在那些維度浪費掉一堆組合,Random 不會。
+
+---
+
+**💾 GPU 記憶體爆掉怎麼辦?(模型架構/硬體都不能換的情況)**
+
+訓練時記憶體 = **模型權重 + 啟動值(activations) + 梯度 + 優化器狀態**,跟 **Batch Size 成正比**。
+
+✅ **正解:縮小 Batch Size + Data Sharding**(s1q37)
+- Batch Size 從 128 → 32 → 單張 GPU 壓力 ↓ 4 倍
+- Data Sharding = 把資料**切碎片**分散到多張 GPU(資料並行)
+- 額外技巧:**Gradient Accumulation** — 跑 4 個小 batch 才更新 1 次,效果接近大 batch
+
+❌ 陷阱選項
+- 「減少訓練資料量」 → 影響模型品質,**犧牲收斂**
+- 「增加學習率加快收斂」 → 跟記憶體無關,反而可能不收斂
+- 「改用 Test Set 訓練」 → **嚴重資料洩漏**
+
+---
+
+**🧪 設計實驗比較兩個模型的「資料效率」要怎麼設?**
+
+題目情境(歷屆 s1q43):VAE+分類器 vs BERT 分類器,2000 筆標註,公平比兩者**資料利用效率**。
+
+✅ 正解:**低資源情境設計** — 把標註逐步減(100% → 50% → 10%),看哪個在資料少時還撐得住 → F1 曲線斜率反映資料效率
+❌ 陷阱:「在完整資料集比 accuracy + 推論時間」 → 看不出**資料效率**差異(都用 100%,當然差不多)`,
+    keyTerms: [
+      { term: "超參數(Hyperparameter)", def: "**Hyper = 上層、Parameter = 參數**。訓練**前**人工決定的設定(學習率、Batch Size、樹深度、L2 強度…),**模型不會自己學**。對比:Parameter 是模型訓練中學到的權重。" },
+      { term: "Grid Search(網格搜尋)", def: "**Grid = 網格**。把每個超參數切等距、**所有組合都跑一遍**。例:學習率 [0.01, 0.001, 0.0001] × 樹深度 [3, 5, 7] = 9 組。**參數一多就爆炸**。" },
+      { term: "Random Search(隨機搜尋)", def: "在參數範圍內**隨機抽 N 組**試。**高維時比 Grid 更有效率**,因為若有不重要的參數,Grid 會在它身上浪費組合,Random 不會。" },
+      { term: "Bayesian Optimization(貝葉斯優化)", def: "**用歷次結果**建一個「哪邊可能比較好」的代理模型,**動態挑下一個試的點**。適合:每次訓練很貴(GPT 那種),不能盲試。" },
+      { term: "Batch Size(批次大小)", def: "**一次餵給模型多少筆資料更新一次權重**。大 batch:梯度穩、但吃記憶體;小 batch:省記憶體、但梯度雜。例:Batch=32 表示 32 筆算一次 loss 反向傳播。" },
+      { term: "Data Sharding(資料分片)", def: "**Shard = 碎片**(玻璃碎片那種)。把訓練資料**切碎分到多張 GPU**,每張 GPU 各算自己那塊,梯度合併再更新 → 單張壓力 ↓。也叫**資料並行(Data Parallelism)**。" },
+      { term: "Gradient Accumulation(梯度累積)", def: "**跑 N 個小 batch、累積梯度,第 N 次才更新權重**。效果≈大 batch,但記憶體只要小 batch 的量。例:想 batch=128 但只能跑 32,那就累積 4 次再更新。" },
+      { term: "低資源實驗(Low-resource Setting)", def: "**故意把標註資料減少**(100% → 50% → 10% → 5%),看模型在資料少時還撐多好。是比較**資料效率**的標準設計。F1 隨資料下降的斜率越平緩 = 資料效率越高。" },
+    ],
+    confusions: [
+      "**「降低 Batch Size」省記憶體,「增加學習率」跟記憶體無關** — 別搞混(s1q37 陷阱 C)",
+      "**減少訓練資料**會犧牲模型品質,不是省記憶體的好方法(s1q37 陷阱 A)",
+      "**「拿 Test Set 來訓練」** = **資料洩漏** — 永遠錯,別被「節省空間」的話術騙(s1q37 陷阱 D)",
+      "**Random Search > Grid Search 在「高維」場景** — 因為 Grid 會在不重要的參數上浪費(s1q36 為何選 Grid 是因題目強調**系統化測試**,要排查所有組合)",
+      "**Hyperparameter ≠ Parameter** — 前者人工設、後者模型學",
+      "**Gradient Accumulation 不是縮資料**,是「分批算梯度、合併才更新」",
+      "**比較資料效率必須用低資源設計**,不能在 100% 資料上比(s1q43 陷阱 A)",
+    ],
+    examPattern: `**4 種考法**:
+
+**① 「系統化測試多組超參數」找最佳組** → **Grid Search**(s1q36) — 關鍵字:**系統化、所有組合**
+**② 「快速探索高維空間」** → **Random Search**;**「每次訓練很貴」** → **Bayesian**
+**③ GPU OOM 怎麼辦** → **縮 Batch Size + Data Sharding**(s1q37);陷阱:減資料、加學習率、用 test set
+**④ 公平比較兩模型的資料效率** → **低資源設計(逐步減標註)+ F1 比較**(s1q43);陷阱:用完整資料比 Accuracy`,
+    relatedTopics: ["訓練"],
+    relatedQids: ["s1q36", "s1q37", "s1q43", "s1q-a10", "s1q-a11", "s1q-a12"],
   },
 
   // ============ 科目2 Ch0: 敘述性統計 ============
