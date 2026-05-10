@@ -460,6 +460,12 @@ function renderReader(cardId) {
   }
 }
 
+// Lightweight inline markdown — for question/option text.
+// Escapes HTML then renders **bold** only. Safe for untrusted-style content.
+function formatInline(text) {
+  return escapeHtml(text).replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+}
+
 function formatIntuition(text) {
   let s = escapeHtml(text);
   s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
@@ -473,13 +479,25 @@ function formatIntuition(text) {
     // Row 2 must be separator (---)
     const isSep = rows[1].every(c => /^:?-+:?$/.test(c.replace(/\s/g, '')));
     if (!isSep) return block;
-    let html = '<table class="md-table"><thead><tr>';
+    let html = '<div class="md-table-wrap"><table class="md-table"><thead><tr>';
     rows[0].forEach(c => html += `<th>${c}</th>`);
     html += '</tr></thead><tbody>';
     for (let i = 2; i < rows.length; i++) {
       html += '<tr>' + rows[i].map(c => `<td>${c}</td>`).join('') + '</tr>';
     }
-    return html + '</tbody></table>';
+    return html + '</tbody></table></div>';
+  });
+  // Horizontal rule: a line containing only --- (3+ dashes)
+  s = s.replace(/^---+[ \t]*$/gm, '<hr class="md-hr">');
+  // Blockquote: lines starting with "> "
+  s = s.replace(/(?:^&gt; [^\n]+\n?)+/gm, (block) => {
+    const lines = block.trim().split('\n').map(l => l.replace(/^&gt; /, ''));
+    return '<blockquote class="md-quote">' + lines.join('<br>') + '</blockquote>';
+  });
+  // Ordered list: lines starting with "1. ", "2. ", ...
+  s = s.replace(/(?:^\d+\. [^\n]+\n?)+/gm, (block) => {
+    const items = block.trim().split('\n').map(l => l.replace(/^\d+\. /, '').trim());
+    return '<ol class="md-ol">' + items.map(i => `<li>${i}</li>`).join('') + '</ol>';
   });
   // Bullet list: lines starting with • or -
   s = s.replace(/(?:^[•\-] [^\n]+\n?)+/gm, (block) => {
@@ -600,12 +618,12 @@ function renderQuiz() {
           ? `<span class="tag source-authored">自編 #${q.number}</span>`
           : `<span class="tag source-past">歷屆 Q${q.number}</span>`}
       </div>
-      <div class="question-text">${escapeHtml(q.question)}</div>
+      <div class="question-text">${formatInline(q.question)}</div>
       <div class="options">
         ${['A','B','C','D'].map(L => `
           <button class="option" data-letter="${L}">
             <span class="letter">${L}</span>
-            <span class="text">${escapeHtml(q.options[L] || '')}</span>
+            <span class="text">${formatInline(q.options[L] || '')}</span>
           </button>
         `).join('')}
       </div>
@@ -805,7 +823,7 @@ function renderStats() {
         ${mistakes.slice(0, 10).map(m => `
           <div class="mistake-item" style="margin-top:8px">
             <div class="qmeta">科目${m.q.subject} · ${escapeHtml(m.q.topic)} · 原 Q${m.q.number}</div>
-            <div class="qtext">${escapeHtml(m.q.question.slice(0, 80))}${m.q.question.length > 80 ? '...' : ''}</div>
+            <div class="qtext">${escapeHtml(m.q.question.replace(/\*\*/g, '').slice(0, 80))}${m.q.question.length > 80 ? '...' : ''}</div>
           </div>
         `).join('')}
         <button class="btn-primary" id="retry-mistakes" style="margin-top:12px">複習錯題</button>
