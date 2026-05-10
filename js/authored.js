@@ -103,5 +103,95 @@ const QUESTIONS_AUTHORED = [
     },
     "answer": "C",
     "topic": "AI風險"
+  },
+  {
+    "id": "s1q-a8",
+    "source": "authored",
+    "subject": 1,
+    "number": 8,
+    "question": "在實作 Early Stopping(早期停止)時,工程師應該以下列哪一條曲線的趨勢來判斷停止時機?",
+    "options": {
+      "A": "訓練誤差(Training Loss),因為它直接反映模型學習進度",
+      "B": "驗證誤差(Validation Loss),當其連續數個 epoch 沒有下降時即停止",
+      "C": "測試誤差(Test Loss),確保最終評估結果最佳",
+      "D": "訓練與驗證誤差的「平均」,以平衡兩者觀點"
+    },
+    "answer": "B",
+    "topic": "訓練"
+  },
+  {
+    "id": "s1q-a9",
+    "source": "authored",
+    "subject": 1,
+    "number": 9,
+    "question": "某團隊在做 5-Fold 交叉驗證時,發現分類問題各類別比例為 90% / 10%(嚴重不平衡)。為了讓**每一折的驗證集都包含具代表性的少數類**,應採用下列何者?",
+    "options": {
+      "A": "Random K-Fold — 完全隨機切分以避免主觀偏誤",
+      "B": "Stratified K-Fold(分層交叉驗證)— 在每一折中維持與原始資料相同的類別比例",
+      "C": "Leave-One-Out CV — 每次只留一筆當驗證,以最大化訓練資料",
+      "D": "Time Series Split — 按時間順序切分以避免未來資訊洩漏"
+    },
+    "answer": "B",
+    "topic": "訓練"
+  },
+  {
+    "id": "s1q-a10",
+    "source": "authored",
+    "subject": 1,
+    "number": 10,
+    "question": "在「高維超參數空間(例如 8 個超參數)」進行調校時,為何 **Random Search(隨機搜尋)經常比 Grid Search(網格搜尋)更有效率**?",
+    "options": {
+      "A": "Random Search 的計算複雜度本質上低於 Grid Search",
+      "B": "Random Search 能保證找到全域最佳解,Grid Search 不能",
+      "C": "若實際上只有少數參數真正影響效能,Grid Search 會在不重要的參數維度上**浪費大量組合**;Random Search 因隨機抽樣,反而有更高機會在「重要參數」上試到好的值",
+      "D": "Random Search 會自動忽略無效的超參數組合"
+    },
+    "answer": "C",
+    "topic": "訓練"
+  },
+  {
+    "id": "s1q-a11",
+    "source": "authored",
+    "subject": 1,
+    "number": 11,
+    "question": "為了避免在交叉驗證中「同時調參+評估」造成資料洩漏,下列哪一種設計最為正確?",
+    "options": {
+      "A": "增加 K 值(例如 5-Fold → 10-Fold)以提升驗證穩定度",
+      "B": "在每一折內隨機重新洗牌資料,以打散原本的順序偏差",
+      "C": "採用**巢狀交叉驗證(Nested CV)**:**外層**用於評估模型效能、**內層**用於超參數搜尋,兩層資料嚴格分離",
+      "D": "把超參數搜尋的範圍縮小,以減少在驗證資料上嘗試的次數"
+    },
+    "answer": "C",
+    "topic": "訓練"
+  },
+  {
+    "id": "s1q-a12",
+    "source": "authored",
+    "subject": 1,
+    "number": 12,
+    "question": "在 GPU 記憶體有限、無法直接使用大 Batch Size(例如 256)訓練的情況下,下列哪一種技巧能在「**不增加單次記憶體占用**」的前提下,**達成接近大 Batch 的梯度更新效果**?",
+    "options": {
+      "A": "提高學習率(Learning Rate)以加速收斂",
+      "B": "改用 Gradient Accumulation(梯度累積)— 連續跑 N 個小 Batch、累積梯度,第 N 次才更新一次權重",
+      "C": "減少訓練資料量,讓總迭代次數變少",
+      "D": "把測試集併入訓練集,以增加每個 Batch 的樣本數"
+    },
+    "answer": "B",
+    "topic": "訓練"
+  },
+  {
+    "id": "s1q-a13",
+    "source": "authored",
+    "subject": 1,
+    "number": 13,
+    "question": "下列關於 **L1 正則化**與 **L2 正則化**的描述,何者**正確**?",
+    "options": {
+      "A": "L1 會把不重要的權重壓成 **0**(產生稀疏解,可順便做特徵選擇);L2 會把所有權重壓**小**但不歸零",
+      "B": "L1 與 L2 在數學上等價,差別只是程式實作風格",
+      "C": "L2 會把不重要的權重壓成 0;L1 只會壓小但不歸零",
+      "D": "兩者都只能用在線性模型,神經網路不適用"
+    },
+    "answer": "A",
+    "topic": "訓練"
   }
 ];
