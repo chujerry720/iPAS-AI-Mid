@@ -796,6 +796,289 @@ RAG 的解法很實用:當使用者問問題時,**先去資料庫檢索相關文
     relatedQids: ["s1q22", "s1q32", "s1q46"],
   },
 
+  {
+    id: "s1c6-2",
+    chapter: "s1c6",
+    order: 2,
+    title: "上線架構 — 容器化 × Kubernetes × CI/CD × 水平擴展",
+    prerequisites: ["s1c6-1"],
+    diagram: `<svg viewBox="0 0 380 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="容器化 + Kubernetes 編排 + 水平自動擴展示意">
+  <!-- CI/CD pipeline strip -->
+  <g transform="translate(10,15)">
+    <text x="180" y="0" text-anchor="middle" font-size="11" font-weight="600" fill="currentColor">CI/CD 流水線</text>
+    <g transform="translate(0,8)" font-size="9" text-anchor="middle">
+      <rect x="0"   y="0" width="68" height="24" fill="#3b82f6" fill-opacity=".15" stroke="#3b82f6"/>
+      <text x="34"  y="16" fill="currentColor">Commit</text>
+      <text x="78"  y="16" fill="#9ca3af">→</text>
+      <rect x="86"  y="0" width="68" height="24" fill="#3b82f6" fill-opacity=".15" stroke="#3b82f6"/>
+      <text x="120" y="16" fill="currentColor">Build+Test</text>
+      <text x="164" y="16" fill="#9ca3af">→</text>
+      <rect x="172" y="0" width="68" height="24" fill="#10b981" fill-opacity=".15" stroke="#10b981"/>
+      <text x="206" y="16" fill="currentColor">Container</text>
+      <text x="250" y="16" fill="#9ca3af">→</text>
+      <rect x="258" y="0" width="100" height="24" fill="#f59e0b" fill-opacity=".15" stroke="#f59e0b"/>
+      <text x="308" y="16" fill="currentColor">K8s 部署</text>
+    </g>
+    <text x="180" y="48" text-anchor="middle" font-size="9" fill="currentColor">每次 Commit 自動觸發 Build → 測試 → 打 image → 上線</text>
+  </g>
+  <!-- Kubernetes orchestration -->
+  <g transform="translate(10,90)">
+    <text x="180" y="0" text-anchor="middle" font-size="11" font-weight="600" fill="currentColor">Kubernetes 水平擴展(同一服務多副本)</text>
+    <!-- Load balancer -->
+    <g transform="translate(150,15)">
+      <rect x="0" y="0" width="60" height="22" fill="#6366f1" fill-opacity=".2" stroke="#6366f1"/>
+      <text x="30" y="15" text-anchor="middle" font-size="10" fill="currentColor">Load LB</text>
+    </g>
+    <text x="180" y="50" text-anchor="middle" font-size="9" fill="currentColor">10,000 RPS 流量</text>
+    <!-- Pods -->
+    <g transform="translate(0,60)" font-size="9" text-anchor="middle">
+      <line x1="180" y1="-5" x2="40"  y2="10" stroke="#9ca3af"/>
+      <line x1="180" y1="-5" x2="115" y2="10" stroke="#9ca3af"/>
+      <line x1="180" y1="-5" x2="190" y2="10" stroke="#9ca3af"/>
+      <line x1="180" y1="-5" x2="265" y2="10" stroke="#9ca3af"/>
+      <line x1="180" y1="-5" x2="340" y2="10" stroke="#9ca3af"/>
+      <g fill="#10b981" fill-opacity=".2" stroke="#10b981">
+        <rect x="14"  y="10" width="52" height="34"/>
+        <rect x="89"  y="10" width="52" height="34"/>
+        <rect x="164" y="10" width="52" height="34"/>
+        <rect x="239" y="10" width="52" height="34"/>
+        <rect x="314" y="10" width="52" height="34"/>
+      </g>
+      <g fill="currentColor">
+        <text x="40"  y="32">Pod 1</text>
+        <text x="115" y="32">Pod 2</text>
+        <text x="190" y="32">Pod 3</text>
+        <text x="265" y="32">Pod 4</text>
+        <text x="340" y="32">Pod 5</text>
+      </g>
+    </g>
+    <!-- Auto-scale arrow -->
+    <g transform="translate(0,118)">
+      <text x="180" y="0" text-anchor="middle" font-size="9" fill="#f59e0b" font-weight="600">↑ CPU&gt;70% → Auto Scaling 自動加 Pod ↑</text>
+    </g>
+  </g>
+</svg>`,
+    intuition: `**問題**:AI 模型訓練完了,**怎麼把它變成「能撐 10,000 次/秒、不會掛掉、能持續更新」的線上服務?**
+
+答案是 4 件事的組合:**容器化 → CI/CD → Kubernetes → 水平擴展**。
+
+---
+
+**① 容器化(Containerization)— 把模型+環境打包成一個「即裝即用」的盒子**
+
+> 沒容器:「我電腦跑得起來啊!」(各種依賴版本問題)
+> 有容器(Docker):**整個運行環境**(Python、CUDA、模型權重)封裝成 image,**搬到哪台機器都跑得起來**
+
+---
+
+**② CI/CD — 程式一改就自動測試 + 自動部署**
+
+| 縮寫 | 全名 | 做什麼 |
+|---|---|---|
+| **CI** | Continuous Integration | **每次 Commit** 都自動觸發:Build → 跑單元測試 → 靜態分析 |
+| **CD** | Continuous Delivery/Deployment | 通過測試的 image **自動推到測試環境**(或正式環境) |
+
+> 反例(s1q29 陷阱):「每天**固定時間手動合併**」「**等訓練完才合併**」 → 都不是 CI,因為不是「每次 Commit 觸發」
+
+---
+
+**③ Kubernetes(K8s)— 容器的「總指揮」**
+
+K8s **不是訓練平台、不是儲存系統、不是 GPU 加速器**(s1q13 陷阱選項全錯)。
+它的核心職責:**部署、擴展、運行環境的協調管理**。
+
+> 想像:K8s 是航空塔台,每個容器是飛機 — 塔台告訴你哪台起飛、哪台降落、哪台需要備援
+
+---
+
+**④ 水平擴展(Horizontal Scaling)+ Auto Scaling — 流量大就多開幾份**
+
+| 擴展方式 | 做法 | 缺點 |
+|---|---|---|
+| **垂直(Vertical)** | 換更強的單機 | **單點失效、成本爆炸、有上限** |
+| **水平(Horizontal)** | 多開幾份服務副本(Pod) | 需要 LB 分流,但**沒上限、有冗餘** |
+
+**Auto Scaling**:設條件(如 CPU > 70%)→ K8s 自動多開 Pod,流量降下去就回收。**這是高 RPS + 高可用的標準解**(s1q31)。
+
+---
+
+**🚨 高 RPS 場景的 4 個陷阱選項**(s1q31)
+
+| 陷阱 | 為什麼錯 |
+|---|---|
+| 「依賴**單台**超強伺服器(垂直擴展)」 | **單點失效、成本爆炸** |
+| 「**限制最大連線數**避免過載」 | 沒解決問題,只是把使用者擋在外面 |
+| 「**增加 Batch 一次處理上千筆**」 | 提高**延遲**(每筆要等湊滿才處理),不適合即時推論 |`,
+    keyTerms: [
+      { term: "容器(Container)", def: "把**程式碼+依賴+作業系統環境**打包成一個輕量盒子,**到哪台機器都能跑**。代表工具:Docker。對比:VM 較重(整套 OS),容器只共用 Kernel。" },
+      { term: "Image vs Container", def: "**Image = 食譜+材料**(靜態的盒子模板);**Container = 照食譜做出來的菜**(運行中的實例)。一個 Image 可以開出 N 個 Container。" },
+      { term: "Kubernetes(K8s)", def: "**容器編排**平台 — 自動處理「哪台機器跑哪個容器、掛了自動重啟、流量大自動擴展」。**不是**訓練平台、不是 GPU 加速器、不是儲存系統(s1q13 陷阱)。" },
+      { term: "Pod", def: "K8s 最小部署單位,**一個 Pod 包 1 個或多個容器**(通常 1 個)。水平擴展就是「同一個服務開多個 Pod」。" },
+      { term: "CI(Continuous Integration)", def: "**Continuous = 持續、Integration = 整合**。每次 Commit **自動觸發** Build + 測試 + 程式碼分析,目的:讓問題**早被發現**。關鍵字「**每次提交**」「**自動**」。" },
+      { term: "CD(Continuous Delivery / Deployment)", def: "**Delivery**:自動把通過測試的版本推到「準正式」環境,等人按鈕上線;**Deployment**:**直接**自動上正式環境。CD 是 CI 的延伸。" },
+      { term: "水平擴展(Horizontal Scaling)", def: "**橫向加機器** — 1 台變 5 台、5 台變 50 台。對比 **垂直擴展(Vertical)**:把單機升級成更強(換 CPU、加記憶體)。水平擴展**沒上限+有冗餘**,垂直**有上限+單點失效**。" },
+      { term: "Auto Scaling(自動彈性伸縮)", def: "依照指標(如 CPU > 70%、RPS > 5000)**自動加減 Pod 數量**。流量峰值來就擴、過了就縮 → 省成本 + 不會掛。是高 RPS + 高可用的**標準解**。" },
+      { term: "Load Balancer(負載平衡器)", def: "**把流量分散到多個 Pod**。沒有它,水平擴展沒意義 — 流量還是全擠到第一個。" },
+    ],
+    confusions: [
+      "**Kubernetes 不是訓練平台、不是儲存、不是 GPU 加速器** — 它是**容器編排器**(s1q13 ABCD 全是常見陷阱)",
+      "**CI 的關鍵是「每次提交自動觸發」** — 「每天定時手動合併」「等訓練完才合併」都不是 CI(s1q29)",
+      "**水平擴展才是高 RPS 解,垂直擴展是陷阱** — 垂直= 換更強單機,有上限+單點失效(s1q31)",
+      "**「限制連線數」「加大 Batch」不是高可用解法** — 前者擋使用者,後者增延遲(s1q31)",
+      "Image ≠ Container:Image 是模板,Container 是運行中的實例",
+      "**CD 兩種解讀:Delivery(到 staging 等人按)vs Deployment(直接上 prod)** — 前者較常見,後者較激進",
+    ],
+    examPattern: `**3 種考法**:
+
+**① Kubernetes 核心職責是?** → 「**部署、擴展、運行環境協調**」(s1q13)
+- 陷阱:訓練、儲存、GPU 加速 — **都不是 K8s 做的**
+
+**② CI 最佳實踐?** → 「**每次 Commit 自動觸發 Build + 測試**」(s1q29)
+- 陷阱:每日定時手動、等訓練完合併、定時批次部署
+
+**③ 高 RPS 服務架構?** → 「**容器化 + 水平擴展 + Auto Scaling**」(s1q31)
+- 陷阱:垂直擴展、限連線數、加大 Batch`,
+    relatedTopics: ["MLOps"],
+    relatedQids: ["s1q13", "s1q29", "s1q31"],
+  },
+
+  {
+    id: "s1c6-3",
+    chapter: "s1c6",
+    order: 3,
+    title: "模型治理 — Model Registry × 不可否認性 × 進階監控",
+    prerequisites: ["s1c6-2"],
+    diagram: `<svg viewBox="0 0 380 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Model Registry 版本樹 + 不可否認性雜湊鏈">
+  <!-- Model Registry -->
+  <g transform="translate(10,15)">
+    <text x="180" y="0" text-anchor="middle" font-size="11" font-weight="600" fill="currentColor">Model Registry — 集中管理模型版本</text>
+    <g transform="translate(0,12)" font-size="10">
+      <!-- v1 -->
+      <rect x="10"  y="0" width="100" height="50" fill="#9ca3af" fill-opacity=".15" stroke="#9ca3af"/>
+      <text x="60"  y="16" text-anchor="middle" fill="currentColor" font-weight="600">v1.0</text>
+      <text x="60"  y="30" text-anchor="middle" font-size="9" fill="currentColor">F1=0.82</text>
+      <text x="60"  y="42" text-anchor="middle" font-size="9" fill="#9ca3af">archived</text>
+      <!-- arrow -->
+      <text x="118" y="28" font-size="14" fill="#9ca3af">→</text>
+      <!-- v2 -->
+      <rect x="135" y="0" width="100" height="50" fill="#9ca3af" fill-opacity=".15" stroke="#9ca3af"/>
+      <text x="185" y="16" text-anchor="middle" fill="currentColor" font-weight="600">v1.1</text>
+      <text x="185" y="30" text-anchor="middle" font-size="9" fill="currentColor">F1=0.85</text>
+      <text x="185" y="42" text-anchor="middle" font-size="9" fill="#9ca3af">staging</text>
+      <text x="243" y="28" font-size="14" fill="#9ca3af">→</text>
+      <!-- v3 production -->
+      <rect x="260" y="0" width="100" height="50" fill="#10b981" fill-opacity=".25" stroke="#10b981" stroke-width="2"/>
+      <text x="310" y="16" text-anchor="middle" fill="currentColor" font-weight="700">v2.0</text>
+      <text x="310" y="30" text-anchor="middle" font-size="9" fill="currentColor">F1=0.91</text>
+      <text x="310" y="42" text-anchor="middle" font-size="9" fill="#10b981" font-weight="600">production ✓</text>
+    </g>
+    <text x="180" y="78" text-anchor="middle" font-size="9" fill="currentColor">每版記錄:訓練資料、超參數、metric、部署狀態 — 出事可秒回退</text>
+  </g>
+  <!-- Non-repudiation chain -->
+  <g transform="translate(10,108)">
+    <text x="180" y="0" text-anchor="middle" font-size="11" font-weight="600" fill="currentColor">不可否認性 — 每筆推論留 Hash + 數位簽章</text>
+    <g transform="translate(0,12)" font-size="10">
+      <!-- request -->
+      <rect x="10" y="0" width="80" height="60" fill="#3b82f6" fill-opacity=".15" stroke="#3b82f6"/>
+      <text x="50" y="16" text-anchor="middle" fill="currentColor" font-weight="600">推論請求</text>
+      <text x="50" y="32" text-anchor="middle" font-size="9" fill="currentColor">Input: X</text>
+      <text x="50" y="46" text-anchor="middle" font-size="9" fill="currentColor">Output: Y</text>
+      <text x="98" y="34" font-size="14" fill="#9ca3af">→</text>
+      <!-- hash -->
+      <rect x="115" y="0" width="100" height="60" fill="#f59e0b" fill-opacity=".15" stroke="#f59e0b"/>
+      <text x="165" y="16" text-anchor="middle" fill="currentColor" font-weight="600">SHA-256</text>
+      <text x="165" y="30" text-anchor="middle" font-size="9" fill="currentColor">Hash(X+Y)</text>
+      <text x="165" y="46" text-anchor="middle" font-size="9" fill="#f59e0b">a3f7c9...</text>
+      <text x="223" y="34" font-size="14" fill="#9ca3af">→</text>
+      <!-- sign -->
+      <rect x="240" y="0" width="120" height="60" fill="#ef4444" fill-opacity=".15" stroke="#ef4444"/>
+      <text x="300" y="16" text-anchor="middle" fill="currentColor" font-weight="600">數位簽章</text>
+      <text x="300" y="30" text-anchor="middle" font-size="9" fill="currentColor">私鑰簽 Hash</text>
+      <text x="300" y="46" text-anchor="middle" font-size="9" fill="#ef4444">事後不可否認</text>
+    </g>
+    <text x="180" y="80" text-anchor="middle" font-size="9" fill="currentColor">日後稽核:用公鑰驗章 → 確認此推論「確實由本系統產生、未被竄改」</text>
+  </g>
+</svg>`,
+    intuition: `**模型上線後的「治理」三件事**:版本管得清、稽核留得住、漂移看得見。
+
+---
+
+**① Model Registry — 模型的「Git」**
+
+集中管理**所有模型版本**:每版記錄訓練資料、超參數、評估指標、部署狀態(staging / production / archived)。
+
+**為什麼要 Registry?**
+- 出事可**秒回退**到上一版(不用重訓)
+- 多人協作不會把對方的模型蓋掉
+- 稽核知道「何時用了哪一版」
+
+**🚨 別搞混(s1q15)**:
+| 你以為是它做的 | 其實是別的工具做的 |
+|---|---|
+| 設定運算資源 / 環境 | **基礎設施(K8s、Terraform)** |
+| 管理資料/特徵版本 | **Feature Store**(如 Feast) |
+| 監控上線後表現 | **Monitoring(Prometheus、Grafana)** |
+| ✅ **集中管理模型版本、訓練紀錄、部署狀態** | **Model Registry**(MLflow、SageMaker Registry) |
+
+---
+
+**② 不可否認性(Non-repudiation)— 金融/醫療必考**
+
+**意思**:**事後不能賴帳**。AI 在某時間點用某模型對某輸入做了某預測 → 之後被告或被審查時,**有證據**可以證明「這推論真的是本系統做的、沒被偷改」。
+
+**怎麼做?(s1q30 正解 = A)**
+1. 每筆推論記錄 **Input + Output**
+2. 算 **SHA-256 雜湊**(把資料壓成固定長度指紋)
+3. 用機構**私鑰做數位簽章** → 日後拿**公鑰**就能驗
+
+**❌ 陷阱選項**(全部跟「不可否認性」無關):
+| 陷阱 | 它解決的其實是 |
+|---|---|
+| 「降低延遲到 100ms」 | **效能**問題 |
+| 「增加備援」 | **可用性** |
+| 「導入 LB」 | **負載平衡** |
+
+---
+
+**③ 進階漂移監控 — VAE 監控潛在空間(s1q42)**
+
+當鑑別式模型(如 Transformer Classifier)上線後分類錯誤率上升,且發現是**輸入資料分佈變了**:
+- 直接看原始輸入很難判斷是否漂移(高維)
+- 用 **VAE** 把輸入壓到**低維潛在空間**,監控潛在分佈的變化 → 比單看 KL 散度更敏銳
+
+> 為什麼不選「換 LR / 加模型容量 / 用 GAN 補資料」?
+> 那些是**改模型架構**,不是**偵測漂移**。題目問的是「**應對**輸入分佈偏移」,先要**偵測到**才知道該不該動。`,
+    keyTerms: [
+      { term: "Model Registry(模型登記)", def: "**集中管理模型版本+元資料**的服務。每版記錄訓練資料來源、超參數、F1/AUC、部署狀態、誰建的。代表工具:**MLflow Registry、SageMaker Registry、Vertex AI Registry**。" },
+      { term: "Feature Store(特徵庫)", def: "**集中管理「特徵」版本**(不是模型版本!)。例:把「使用者過去 30 天購買次數」這個特徵存起來,訓練+推論用同一份避免不一致。代表工具:**Feast、Tecton**。" },
+      { term: "不可否認性(Non-repudiation)", def: "**Repudiate = 否認、賴帳**;**Non-repudiation = 不能賴帳**。資安四大要求之一(機密、完整、可用、不可否認)。AI 場景:每筆推論留**雜湊+簽章**,事後可證明此推論「確實由本系統做、沒被改」。" },
+      { term: "雜湊(Hash)", def: "把任意長度資料**壓縮成固定長度指紋**(如 SHA-256 = 256 位元)。特性:輸入動一個字元,Hash 完全變;**單向不可逆**(知 Hash 無法回推原文)。" },
+      { term: "數位簽章(Digital Signature)", def: "用**私鑰**對 Hash 加密 → 任何人用對應**公鑰**都能驗。能證明「**真的是本人簽的**(因為只有本人有私鑰)+ **內容沒被改**(因 Hash 對得上)」。" },
+      { term: "VAE 監控潛在空間漂移", def: "把高維輸入用 **VAE 壓到低維潛在空間**,監控**該空間的分佈變化** → 比直接在原始輸入上算 KL 散度更敏銳,適合鑑別式模型(如 Transformer)上線後的漂移偵測。" },
+      { term: "MLOps", def: "**Machine Learning Operations** = 把 DevOps 觀念套用到 ML 的整套實務。涵蓋:資料版本、模型版本、CI/CD、部署、監控、再訓練觸發。" },
+    ],
+    confusions: [
+      "**Model Registry 只管「模型版本」**,不是設環境(K8s 才是)、不是管資料(Feature Store 才是)、不是監控(Prometheus 才是)(s1q15)",
+      "**不可否認性 = Hash + 數位簽章**,**不是**「降低延遲」「加備援」「導入 LB」(s1q30)",
+      "**Non-repudiation 是資安四要素之一**(C-I-A-N:機密 Confidentiality、完整 Integrity、可用 Availability、不可否認 Non-repudiation),AI 進金融/醫療必考",
+      "**VAE 在 MLOps 裡的另一個用途 = 監控潛在空間漂移**(s1q42),不只是生成模型",
+      "Model Registry vs Feature Store:**模型** vs **特徵**,別搞混",
+      "雜湊**單向不可逆** — 知 SHA-256 結果不可能回推原文(密碼學基礎)",
+    ],
+    examPattern: `**3 種考法**:
+
+**① Model Registry 用途?** → 「**集中管理模型版本、訓練紀錄、部署狀態**」(s1q15)
+- 陷阱:管環境(K8s)、管特徵(Feature Store)、上線後監控(Monitoring)
+
+**② 金融 AI 滿足「不可否認性」?** → 「**Hash + 數位簽章**」(s1q30)
+- 陷阱:降延遲、備援、LB — 全是別的需求
+
+**③ 鑑別式模型上線後分類錯誤率升 + 輸入分佈偏移?** → 「**用 VAE 監控潛在空間分佈**」(s1q42)
+- 陷阱:加模型容量、換邏輯迴歸、用 GAN 生資料`,
+    relatedTopics: ["MLOps"],
+    relatedQids: ["s1q15", "s1q30", "s1q42"],
+  },
+
   // ============ 科目1 Ch7: AI 風險治理 ============
   {
     id: "s1c7-1",
